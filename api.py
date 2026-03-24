@@ -153,7 +153,7 @@ async def sentiment(body: PhraseRequest):
 
 # ---------- Lemmatiseur ----------
 class MalagasyUltraAnalyzer:
-    def __init__(self, file_path='DatasetMalagasy.csv'):
+    def __init__(self, file_path='dataset/DatasetMalagasy.csv'):
         self.lemma_map = {}
         self.all_roots = set()
         self.stop_words = {
@@ -205,7 +205,7 @@ class MalagasyUltraAnalyzer:
             final_root = self.lemma_map[original]
         return {"mot": original, "prefixe": prefix, "infixe": found_infix, "racine": final_root, "suffixe": suffix}
 
-lemmatiseur = MalagasyUltraAnalyzer('DatasetMalagasy.csv')
+lemmatiseur = MalagasyUltraAnalyzer('dataset/DatasetMalagasy.csv')
 
 # ---------- Modèles Pydantic ----------
 class WordAnalysis(BaseModel):
