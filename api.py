@@ -69,7 +69,7 @@ class CorrectionResponse(BaseModel):
 
 # ---------- Chargement dictionnaire ----------
 def charger_dictionnaire() -> frozenset:
-    df = pd.read_csv("dataset/DatasetMalagasy.csv")
+    df = pd.read_csv("dataset/DatasetMalagasy.csv", encoding="latin-1")
     df.columns = ["racine", "derives"]
     mots = set()
     for _, row in df.iterrows():
