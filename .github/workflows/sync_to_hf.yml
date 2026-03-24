@@ -14,4 +14,4 @@ jobs:
       - name: Push to HF
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: git push --force https://adriantsoaa:$HF_TOKEN@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back main
+        run: git push --force https://adriantsoaa:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back main
