@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from fastapi import HTTPException, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(redirect_slashes=False)
 
 # Configurez les origines autorisées (ne pas mettre de slash final)
 origins = [
@@ -16,9 +16,9 @@ origins = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    # allow_credentials=True,
-    allow_methods=["POST"],
-    allow_headers=["Content-Type"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
  # Remplacez ce chemin par le chemin réel de votre modèle IA exporté (ex: .joblib, .pkl, .pt)
