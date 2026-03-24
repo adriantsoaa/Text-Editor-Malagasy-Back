@@ -14,4 +14,8 @@ jobs:
           lfs: true
 
       - name: Push to HF
-        run: git push --force https://adriantsoaa:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back main
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git remote add hf https://adriantsoaa:$HF_TOKEN@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back
+          git push --force hf main
