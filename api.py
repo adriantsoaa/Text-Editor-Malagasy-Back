@@ -1,4 +1,5 @@
 import joblib
+import csv, os
 import pandas as pd, re, pybktree
 from pathlib import Path
 from pydantic import BaseModel
@@ -148,3 +149,88 @@ async def sentiment(body: PhraseRequest):
     if not body.phrase.strip():
         raise HTTPException(status_code=400, detail="Phrase vide")
     return analyser_sentiment(body.phrase)
+
+
+# ---------- Lemmatiseur ----------
+class MalagasyUltraAnalyzer:
+    def __init__(self, file_path='dataset/DatasetMalagasy.csv'):
+        self.lemma_map = {}
+        self.all_roots = set()
+        self.stop_words = {
+            'ny','sy','dia','ary','fa','nefa','kanefa','hoe','izay','no','ka',
+            'tamin','an','eo','ao','any','ho','mba','ireo','ity','izany','io',
+            'izao','tokony','efa','mbola','koa','rehetra','izy','izahay','ianareo','isika'
+        }
+        self.prefixes = sorted(['mpan','mpam','maha','man','mam','mi','ma','fi','fan','fam','mpi'], key=len, reverse=True)
+        self.suffixes = sorted(['ana','ina','na'], key=len, reverse=True)
+        self.infixes  = ['in','om','im','if','re','il','amp']
+        self.load_data(file_path)
+
+    def load_data(self, file_path):
+        if os.path.exists(file_path):
+            with open(file_path, mode='r', encoding='latin1') as f:
+                reader = csv.reader(f)
+                next(reader, None)
+                for row in reader:
+                    if len(row) >= 2:
+                        root = row[0].strip().lower()
+                        self.all_roots.add(root)
+                        for d in str(row[1]).split(','):
+                            d = d.strip().lower()
+                            if d: self.lemma_map[d] = root
+                        self.lemma_map[root] = root
+
+    def analyze_word(self, word: str):
+        original = word.lower().strip().strip('.,!?:;()[]"\'')
+        if not original or original in self.stop_words:
+            return None
+        prefix, suffix, infix, current = "", "", "", original
+        for p in self.prefixes:
+            if current.startswith(p):
+                prefix, current = p, current[len(p):]
+                break
+        for s in self.suffixes:
+            if current.endswith(s):
+                suffix, current = s, current[:-len(s)]
+                break
+        final_root, found_infix = current, ""
+        for i in self.infixes:
+            if i in current[1:4]:
+                parts = current.split(i, 1)
+                reconstructed = parts[0] + parts[1]
+                if reconstructed in self.all_roots or reconstructed in self.lemma_map:
+                    found_infix, final_root = i, reconstructed
+                    break
+        if final_root == current and original in self.lemma_map:
+            final_root = self.lemma_map[original]
+        return {"mot": original, "prefixe": prefix, "infixe": found_infix, "racine": final_root, "suffixe": suffix}
+
+lemmatiseur = MalagasyUltraAnalyzer('dataset/DatasetMalagasy.csv')
+
+# ---------- Modèles Pydantic ----------
+class WordAnalysis(BaseModel):
+    mot: str
+    prefixe: str
+    infixe: str
+    racine: str
+    suffixe: str
+    est_stop_word: bool
+
+class LemmaResponse(BaseModel):
+    resultats: list[WordAnalysis]
+
+# ---------- Route ----------
+@app.post("/lemmatiser", response_model=LemmaResponse)
+async def lemmatiser(body: PhraseRequest):
+    if not body.phrase.strip():
+        raise HTTPException(status_code=400, detail="Phrase vide")
+    import re
+    tokens = re.findall(r"[a-zA-ZÀ-ÿ']+", body.phrase)
+    resultats = []
+    for token in tokens:
+        res = lemmatiseur.analyze_word(token)
+        if res is None:
+            resultats.append(WordAnalysis(mot=token.lower(), prefixe="", infixe="", racine=token.lower(), suffixe="", est_stop_word=True))
+        else:
+            resultats.append(WordAnalysis(**res, est_stop_word=False))
+    return LemmaResponse(resultats=resultats)
