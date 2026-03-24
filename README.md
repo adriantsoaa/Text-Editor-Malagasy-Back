@@ -1,6 +1,6 @@
 ---
 title: Text Editor Malagasy Back
-emoji: 🇲🇬
+emoji: 🚀
 colorFrom: red
 colorTo: green
 sdk: docker

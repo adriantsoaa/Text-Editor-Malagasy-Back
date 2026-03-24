@@ -17,5 +17,5 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.ADMIN }}
         run: |
-          git remote add hf https://adriantsoaa:$HF_TOKEN@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back
+          git remote add hf https://adriantsoaa:$HF_TOKEN@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back || git remote set-url hf https://adriantsoaa:$HF_TOKEN@huggingface.co/spaces/adriantsoaa/text-editor-malagasy-back
           git push --force hf main
