@@ -121,3 +121,30 @@ async def corriger(body: PhraseRequest):
     if not body.phrase.strip():
         raise HTTPException(status_code=400, detail="Phrase vide")
     return CorrectionResponse(resultats=corriger_phrase(body.phrase))
+
+# ---------- Modèles Sentiment ----------
+class SentimentResponse(BaseModel):
+    label: str        # "Positif" | "Négatif" | "Neutre"
+    score: int
+    positifs: int
+    negatifs: int
+
+# ---------- Dictionnaires ----------
+positive_words = {"tsara", "soa", "mahafinaritra", "tia", "faly", "sambatra", "mahafaly", "fitiavana", "firindrana", "fanantenana", "maniry", "mankasitraka", "midera", "manaja", "miara", "mahery", "matanjaka", "manan-kery", "hendry", "mahalala", "malala", "mazava", "marina", "mendrika", "vonona", "velona", "mifaly", "miorina", "ampy", "nahomby", "voaaro", "afaka", "mahay", "maivana", "manitra", "tonga", "mirindra", "mahatoky", "zara", "mifankatia", "miray", "mahasoa", "mahomby", "mahitsy", "mamelona", "mampandroso", "fandroso", "fandrosoana", "rariny", "fahamarinana", "fahendrena", "fahaizana", "fananana", "hafaliana", "hasambarana", "fifankatiavana", "fitiavam-pirenena", "fahatokiana", "fiadanana", "fiarahana", "firaisana", "fivavahana", "fahasoavana", "fitahiana", "vonjy", "tohana", "mazoto", "tsiky", "herimpo", "sahy", "malina"}
+
+negative_words = {"ratsy", "marary", "malahelo", "kivy", "tahotra", "alahelo", "tezitra", "sahirana", "maizina", "loza", "diso", "reraka", "malazo", "mahantra", "fadiranovana", "haromotana", "fahoriana", "fanafihana", "miady", "mamono", "mandroba", "mandainga", "mampahory", "mahamenatra", "very", "mampanahy", "osa", "kamo", "adala", "adiana", "masiaka", "mahafaty", "manimba", "mifanditra", "mifanandrina", "manary", "taitra", "mitaraina", "tsiny", "henatra", "latsa", "faneriterena", "fanenjehana", "fahantrana", "fahalemena", "fahasarotana", "fahaketrahana", "faharesena", "voatery", "voaroba", "maloaka"}
+
+def analyser_sentiment(phrase: str) -> SentimentResponse:
+    tokens = re.sub(r"[.,!?;:'\"()\-]", " ", phrase.lower()).split()
+    pos = sum(1 for t in tokens if t in positive_words)
+    neg = sum(1 for t in tokens if t in negative_words)
+    score = pos - neg
+    label = "Positif" if score > 0 else ("Négatif" if score < 0 else "Neutre")
+    return SentimentResponse(label=label, score=score, positifs=pos, negatifs=neg)
+
+# ---------- Route Sentiment ----------
+@app.post("/sentiment", response_model=SentimentResponse)
+async def sentiment(body: PhraseRequest):
+    if not body.phrase.strip():
+        raise HTTPException(status_code=400, detail="Phrase vide")
+    return analyser_sentiment(body.phrase)
