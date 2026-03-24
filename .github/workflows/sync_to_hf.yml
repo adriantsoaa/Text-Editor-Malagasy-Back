@@ -1,7 +1,8 @@
 name: Sync to Hugging Face
 on:
   push:
-    branches: [master]
+    branches: [main]
+  workflow_dispatch:
 jobs:
   deploy:
     runs-on: ubuntu-latest
